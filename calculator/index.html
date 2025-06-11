@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <title>卷軸期望值計算器</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="../style.css"><!-- 共用樣式 -->
+</head>
+
+  <!-- ===== 以下為 Day-3 最終版期望值工具（原始單檔） ===== -->
+  <!-- ★ 直接貼上你在 Canvas 的 Day-3 完整 HTML 內容 ★ -->
+  <!-- 只需把內嵌 <style> 區塊刪除（已併到 style.css） -->
+  <!-- 其餘不變；內嵌 <script> 保留即可 -->
+  <!-- …………………… -->
+<body>
+  <!-- ===== 全站導覽列 ===== -->
+  <nav class="main-nav">
+    <a href="/">成本計算</a>
+    <a href="/calculator/" class="active">期望值計算</a>
+  </nav>
+  <h1 title="根據 60% 與 10% 卷軸成功率計算最終攻擊分布與期望">捲軸強化期望值計算器</h1>
+
+  <div class="input-grid">
+    <label for="baseAtk" title="裝備未捲前的原始攻擊值">乾淨攻擊值</label>
+    <input id="baseAtk" type="number" value="77" min="0">
+
+    <label for="slots" title="裝備可用卷軸槽">可用卷軸數</label>
+    <input id="slots" type="number" value="7" min="0">
+
+    <label for="n60" title="60% 卷軸張數 (成功 +2 攻)">60% 卷軸張數</label>
+    <input id="n60" type="number" value="4" min="0">
+
+    <label for="n10" title="10% 卷軸張數 (成功 +3 攻)">10% 卷軸張數</label>
+    <input id="n10" type="number" value="3" min="0">
+  </div>
+  <button id="calcBtn" title="重新計算">計算</button>
+
+  <div id="errorMsg"></div>
+  <div id="stats"></div>
+  <div id="tables"></div>
+
+<script>
+/********** Utilities **********/
+function comb(n,k){if(k<0||k>n)return 0;if(k===0||k===n)return 1;k=Math.min(k,n-k);let r=1;for(let i=1;i<=k;i++)r=r*(n-k+i)/i;return r}
+function classifyProb(p){if(p===0)return"p-zero";if(p>=0.15)return"p-high";if(p>=0.05)return"p-mid-hi";if(p>=0.01)return"p-mid";return"p-low"}
+
+/********** Global State **********/
+let currentRecords=[];let sortKey="prob";let sortAsc=false;
+
+/********** Main Calculate **********/
+function calc(){const baseAtk=+baseAtkEl.value;const slots=+slotsEl.value;const n60=+n60El.value;const n10=+n10El.value;errorEl.textContent="";if([baseAtk,slots,n60,n10].some(v=>isNaN(v)||v<0)){showErr("所有輸入需為非負數");return}if(n60+n10>slots){showErr("60% + 10% 張數不可超過可用卷軸數！");return}
+  const p60=.6,p10=.1;currentRecords=[];let expected=0,maxAtk=-Infinity,minAtk=Infinity;const atkProb=new Map();
+  for(let s60=0;s60<=n60;s60++)for(let s10=0;s10<=n10;s10++){const prob=comb(n60,s60)*p60**s60*(1-p60)**(n60-s60)*comb(n10,s10)*p10**s10*(1-p10)**(n10-s10);if(!prob)continue;const atk=baseAtk+s60*2+s10*3;currentRecords.push({s60,s10,atk,prob});expected+=atk*prob;maxAtk=Math.max(maxAtk,atk);minAtk=Math.min(minAtk,atk);atkProb.set(atk,(atkProb.get(atk)||0)+prob)}
+  let modeAtk=baseAtk,modeProb=0;atkProb.forEach((p,a)=>{if(p>modeProb){modeProb=p;modeAtk=a}});
+  statsEl.innerHTML="";const chip=t=>{const s=document.createElement("span");s.textContent=t;return s};statsEl.append(chip(`期望攻擊：${expected.toFixed(2)}`),chip(`機率最高：${(modeProb*100).toFixed(2)}% → ${modeAtk}`),chip(`最大攻擊：${maxAtk} (${(atkProb.get(maxAtk)*100).toFixed(3)}%)`),chip(`最小攻擊：${minAtk} (${(atkProb.get(minAtk)*100).toFixed(3)}%)`));
+  buildMatrixTable(n60,n10);renderAtkTable()}
+
+function showErr(msg){errorEl.textContent=msg;statsEl.innerHTML="";tablesEl.innerHTML=""}
+
+/********** Build Probability Matrix **********/
+function buildMatrixTable(n60,n10){tablesEl.innerHTML="";const title=document.createElement("h2");title.textContent="成功機率矩陣";const tbl=document.createElement("table");const head=document.createElement("tr");head.appendChild(document.createElement("th"));for(let c=0;c<=n60;c++){const th=document.createElement("th");th.textContent=`60% 成功 ${c}`;head.appendChild(th)}tbl.appendChild(head);
+  for(let s10=0;s10<=n10;s10++){const tr=document.createElement("tr");const rowTh=document.createElement("th");rowTh.textContent=`10% 成功 ${s10}`;tr.appendChild(rowTh);for(let s60=0;s60<=n60;s60++){const rec=currentRecords.find(r=>r.s60===s60&&r.s10===s10);const td=document.createElement("td");const p=rec?rec.prob:0;td.textContent=p?p.toFixed(6):"0";td.className=classifyProb(p);tr.appendChild(td)}tbl.appendChild(tr)}tablesEl.append(title,tbl);
+  const atkDiv=document.createElement("div");atkDiv.id="atkContainer";tablesEl.append(atkDiv)}
+
+/********** Render Attack Table **********/
+function renderAtkTable(){currentRecords.sort((a,b)=>{const dir=sortAsc?1:-1;if(sortKey==="prob")return dir*(a.prob-b.prob);if(sortKey==="atk")return dir*(a.atk-b.atk);if(sortKey==="s60")return dir*(a.s60-b.s60);if(sortKey==="s10")return dir*(a.s10-b.s10);return 0});
+  const atkDiv=document.getElementById("atkContainer");atkDiv.innerHTML="";const h2=document.createElement("h2");h2.textContent="攻擊值與機率 (點擊表頭可排序)";const tbl=document.createElement("table");const hdr=document.createElement("tr");const cols=[{k:"s60",l:"60% 成功"},{k:"s10",l:"10% 成功"},{k:"atk",l:"最終攻擊"},{k:"prob",l:"機率"}];cols.forEach(c=>{const th=document.createElement("th");th.textContent=c.l;th.dataset.key=c.k;if(sortKey===c.k)th.classList.add(sortAsc?"sort-asc":"sort-desc");th.onclick=()=>{if(sortKey===c.k)sortAsc=!sortAsc;else{sortKey=c.k;sortAsc=false}renderAtkTable()};hdr.appendChild(th)});tbl.appendChild(hdr);
+  currentRecords.forEach(r=>{const tr=document.createElement("tr");[r.s60,r.s10,r.atk,(r.prob*100).toFixed(3)+"%"].forEach(v=>{const td=document.createElement("td");td.textContent=v;tr.appendChild(td)});tbl.appendChild(tr)});atkDiv.append(h2,tbl)}
+
+/********** DOM references & init **********/
+const baseAtkEl=document.getElementById("baseAtk");const slotsEl=document.getElementById("slots");const n60El=document.getElementById("n60");const n10El=document.getElementById("n10");const errorEl=document.getElementById("errorMsg");const statsEl=document.getElementById("stats");const tablesEl=document.getElementById("tables");
+
+document.getElementById("calcBtn").addEventListener("click",calc);window.addEventListener("load",calc);
+</script>
+</body>
+</html>
+

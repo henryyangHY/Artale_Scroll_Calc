@@ -1,0 +1,96 @@
+body {
+  font-family: system-ui, sans-serif;
+  margin: 0 auto;
+  max-width: 860px;
+  padding: 1.5rem;
+  background: #f7f7f7;
+}
+h1 { text-align: center; }
+.card {
+  background: #fff;
+  padding: 1rem 1.5rem;
+  margin: 1.2rem 0;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0,0,0,.07);
+}
+.grid {
+  display: grid;
+  gap: .8rem 1rem;
+  grid-template-columns: repeat(auto-fit,minmax(260px,1fr));
+}
+label { display: flex; flex-direction: column; font-weight: 600; gap: .25rem; }
+input, textarea {
+  padding: .4rem .5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+#output p, #output h3 { margin: .4rem 0; }
+.result-good { color: #097969; font-weight: 700; }
+.result-bad  { color: #c0392b; font-weight: 700; }
+
+
+.final-stat span {
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+
+.key-stat { font-size:1.4rem; font-weight:700; color:#c0392b; margin:.25rem 0; }
+.result-good { color:#0a7f6f; font-weight:600; }
+.result-bad  { color:#c0392b; font-weight:600; }
+
+/* 機率表 */
+.prob-table{border-collapse:collapse;margin-top:.5rem;font-size:.9rem}
+.prob-table th,.prob-table td{border:1px solid #ccc;padding:.25rem .5rem;text-align:center}
+.prob-max{color:#0a7f6f;font-weight:700;}
+.prob-min{color:#c0392b;font-weight:700;}
+.atk-cell{font-weight:600;}   /* ★ 新列：攻擊值加粗 */
+
+/* ====== Global nav bar ====== */
+.main-nav{
+  display:flex;
+  gap:1rem;
+  margin-bottom:1.2rem;
+}
+.main-nav a{
+  text-decoration:none;
+  padding:.45rem .9rem;
+  border-radius:5px;
+  background:#1976d2;
+  color:#fff;
+  font-weight:600;
+}
+.main-nav a.active{
+  background:#0d47a1;
+}
+
+/* ====== 期望值計算器額外樣式 ====== */
+.input-grid{
+  display:grid;
+  gap:.8rem 1.2rem;
+  grid-template-columns:max-content auto;
+  max-width:22rem;
+}
+.input-grid input{
+  width:7rem;
+}
+
+#stats{
+  display:flex;
+  gap:.8rem 1.3rem;
+  flex-wrap:wrap;
+  font-weight:600;
+  margin-bottom:1.3rem;
+}
+#stats span{
+  background:#f1f8e9;
+  padding:.45rem .9rem;
+  border-radius:6px;
+}
+
+/* 成功機率矩陣用色碼 */
+.p-zero   { background:#eee;   color:transparent; }
+.p-low    { background:#f44336;color:#fff; }
+.p-mid    { background:#ffeb3b;}
+.p-mid-hi { background:#8bc34a;}
+.p-high   { background:#388e3c;color:#fff;}
